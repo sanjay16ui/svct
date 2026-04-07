@@ -148,7 +148,8 @@ export default function WishlistPage() {
                             value={wishId}
                             onChange={(e) => setWishId(e.target.value)}
                             placeholder="Enter your Wish ID #..."
-                            className="bg-white/5 border border-[#f5c842]/40 rounded-full px-6 py-3 outline-none focus:border-[#f5c842] w-64 text-white"
+                            className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full"
+                            style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }}
                         />
                         <button type="submit" className="bg-[#f5c842] text-black font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform">
                             Track Wish

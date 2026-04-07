@@ -179,7 +179,8 @@ export default function ShopPage() {
                   setPage(1)
                 }}
                 placeholder="Search handmade pieces..."
-                className="w-full bg-white/[0.05] border border-[#f5c842]/40 rounded-full text-white font-serif px-12 py-3 outline-none focus:shadow-[0_0_20px_rgba(245,200,66,0.3)] focus:border-[#f5c842]"
+                className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-12 py-3 w-full"
+                style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }}
               />
             </div>
             <div className="w-full overflow-x-auto">

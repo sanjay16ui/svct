@@ -44,14 +44,14 @@ export default function SignupFormCard({ embedded = false, onSuccess }: Props) {
     <form onSubmit={submit} className="liquid-glass rounded-3xl p-8 w-full max-w-md border border-white/10">
       <h1 className="font-serif text-5xl mb-2">Create your account</h1>
       <p className="text-white/65 mb-8">Join Larkspur_crochets</p>
-      <input className="glass-input mb-4" placeholder="Username" required value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} />
-      <input className="glass-input mb-4" placeholder="Email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+      <input className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full mb-4" style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }} placeholder="Username" required value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} />
+      <input className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full mb-4" style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }} placeholder="Email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
       <div className="relative mb-4">
-        <input className="glass-input pr-12" type={showPassword ? 'text' : 'password'} placeholder="Password" required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
+        <input className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full pr-12" style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }} type={showPassword ? 'text' : 'password'} placeholder="Password" required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
         <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-4 top-3 text-white/70">{showPassword ? <EyeOff /> : <Eye />}</button>
       </div>
       <div className="relative mb-2">
-        <input className="glass-input pr-12" type={showConfirm ? 'text' : 'password'} placeholder="Confirm Password" required value={form.confirmPassword} onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))} />
+        <input className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full pr-12" style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }} type={showConfirm ? 'text' : 'password'} placeholder="Confirm Password" required value={form.confirmPassword} onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))} />
         <button type="button" onClick={() => setShowConfirm((s) => !s)} className="absolute right-4 top-3 text-white/70">{showConfirm ? <EyeOff /> : <Eye />}</button>
       </div>
       {error && <p className="text-red-300 text-sm mb-3">{error}</p>}

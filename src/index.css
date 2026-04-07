@@ -205,3 +205,19 @@ html {
 .wish-btn {
   animation: pulseGlow 2.2s ease-in-out infinite;
 }
+
+input, textarea, select {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  caret-color: #f5c842 !important;
+}
+input::placeholder, textarea::placeholder {
+  color: rgba(255,255,255,0.4) !important;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0px 1000px #000000 inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}

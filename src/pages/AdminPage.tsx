@@ -159,14 +159,16 @@ export default function AdminPage() {
           <form onSubmit={addProduct} className="liquid-glass rounded-2xl border border-white/10 p-4">
             <div className="grid md:grid-cols-3 gap-3">
               <input
-                className="glass-input"
+                className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full"
+                style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }}
                 placeholder="Title *"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 required
               />
               <input
-                className="glass-input"
+                className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full"
+                style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }}
                 placeholder="Price *"
                 type="number"
                 value={form.price}
@@ -193,13 +195,15 @@ export default function AdminPage() {
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               />
               <input
-                className="glass-input"
+                className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full"
+                style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }}
                 placeholder="Offer Label (e.g. NEW / 20% OFF)"
                 value={form.offer_label}
                 onChange={(e) => setForm((f) => ({ ...f, offer_label: e.target.value }))}
               />
               <input
-                className="glass-input"
+                className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full"
+                style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }}
                 placeholder="Stock quantity"
                 type="number"
                 value={form.stock}
@@ -250,7 +254,8 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <input
-                  className="glass-input"
+                  className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full"
+                  style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }}
                   placeholder="Image URL"
                   value={form.image_url}
                   onChange={(e) => {

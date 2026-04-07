@@ -47,9 +47,9 @@ export default function LoginPage() {
             {infoMessage}
           </motion.div>
         )}
-        <input className="glass-input mb-4" placeholder="Email or Username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full mb-4" style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }} placeholder="Email or Username" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <div className="relative mb-2">
-          <input className="glass-input pr-12" type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input className="bg-black text-white border border-yellow-400/40 placeholder-white/40 focus:outline-none focus:border-yellow-400 rounded-md px-4 py-2 w-full pr-12" style={{ background: '#000', color: '#fff', border: '1px solid rgba(245,200,66,0.4)', caretColor: '#f5c842' }} type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-4 top-3 text-white/70">{showPassword ? <EyeOff /> : <Eye />}</button>
         </div>
         {error && <p className="text-red-300 text-sm mb-3">{error}</p>}
