@@ -2,6 +2,14 @@
 
 Handmade crochet e-commerce — fully portable, git-clone ready.
 
+FIRST TIME SETUP:
+  Windows → double-click start.bat
+  Mac/Linux → bash start.sh
+
+  Then open: http://localhost:5173
+  Admin login: sathurika / sathu@2004
+  (If login fails: cd backend && node reset-admin.js)
+
 ## Tech Stack
 Frontend: React + TypeScript + Vite + Tailwind + Framer Motion + Three.js
 Backend: Node.js + Express + SQLite (better-sqlite3) + Multer + bcrypt + JWT

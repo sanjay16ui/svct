@@ -165,25 +165,14 @@ app.delete('/api/admin/clear/all', requireAdmin, async (_req, res) => {
 })
 
 async function ensureAdmin() {
-  // Primary admin — sathurika / sathu@2004
   const row = db.get('SELECT id FROM users WHERE username = ?', ['sathurika'])
   if (!row) {
     const passwordHash = await bcrypt.hash('sathu@2004', 10)
-    db.run("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')", [
-      'sathurika',
-      'sathurika@larkspur.local',
-      passwordHash,
-    ])
-  }
-  // Fallback admin — admin / admin123
-  const genericAdmin = db.get('SELECT id FROM users WHERE username = ?', ['admin'])
-  if (!genericAdmin) {
-    const hash = await bcrypt.hash('admin123', 10)
-    db.run("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')", [
-      'admin',
-      'admin@larkspur.local',
-      hash,
-    ])
+    db.run(
+      "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')",
+      ['sathurika', 'sathurika@larkspur.local', passwordHash]
+    )
+    console.log('✅ Admin user created: sathurika')
   }
 }
 
