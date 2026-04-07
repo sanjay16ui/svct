@@ -8,8 +8,8 @@ npm install
 node reset-admin.js
 cd ..
 echo "[3/3] Starting servers..."
-cd backend && node server.js &
-cd ..
+(cd backend && node server.js) &
 npx vite &
 echo "Open: http://localhost:5173"
 echo "Admin: sathurika / sathu@2004"
+wait

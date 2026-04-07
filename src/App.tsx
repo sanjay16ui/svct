@@ -11,6 +11,7 @@ import ShopPage from './pages/ShopPage'
 import SignupPage from './pages/SignupPage'
 import NotFoundPage from './pages/NotFoundPage'
 import TrackOrderPage from './pages/TrackOrderPage'
+import WishlistPage from './pages/WishlistPage'
 
 function App() {
   const location = useLocation()
@@ -30,6 +31,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ShopPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wishlist"
+              element={
+                <ProtectedRoute>
+                  <WishlistPage />
                 </ProtectedRoute>
               }
             />

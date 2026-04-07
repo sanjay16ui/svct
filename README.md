@@ -1,44 +1,30 @@
 # Larkspur Crochets
 
-Handmade crochet e-commerce — fully portable, git-clone ready.
+## Setup (first time only)
+```bash
+git clone <repo-url>
+cd svct-main
+npm install
+cd backend && npm install && node reset-admin.js && cd ..
+```
 
-FIRST TIME SETUP:
-  Windows → double-click start.bat
-  Mac/Linux → bash start.sh
+## Run the project
+```bash
+# Terminal 1 — backend
+cd backend
+node server.js
 
-  Then open: http://localhost:5173
-  Admin login: sathurika / sathu@2004
-  (If login fails: cd backend && node reset-admin.js)
+# Terminal 2 — frontend
+npm run dev
+```
 
-## Tech Stack
-Frontend: React + TypeScript + Vite + Tailwind + Framer Motion + Three.js
-Backend: Node.js + Express + SQLite (better-sqlite3) + Multer + bcrypt + JWT
+## Check the database (VS Code terminal)
+```bash
+cd backend
+node dbcheck.cjs
+```
 
-## Run Locally
-Requirements: Node.js v18+
-
-Windows: double-click start.bat
-Mac/Linux: bash start.sh
-
-Manual:
-  Terminal 1: cd backend && npm install && node server.js
-  Terminal 2: cd frontend && npm install && npm run dev
-  Open: http://localhost:5173
-
-## Admin Login
-URL: http://localhost:5173/admin
-Username: sathurika
-Password: sathu@2004
-Reset: cd backend && node reset-admin.js
-
-## Pages
-/ — Home
-/shop — Shop
-/wishlist — Wishlist
-/admin — Admin Panel
-/login — Login
-
-## Admin Panel Tabs
-- Products: add/edit/delete products with images
-- Orders: view and update order status
-- Wish Orders: view custom crochet requests, reference files, reply to users
+## Admin login
+- Username: sathurika
+- Password: sathu@2004
+- URL: http://localhost:5173/login
