@@ -12,7 +12,7 @@ try {
 
 console.log('\n========== ALL PRODUCTS ==========');
 try {
-  const products = db.prepare('SELECT id, name, price, stock, created_at FROM products').all();
+  const products = db.prepare('SELECT id, title, price, stock, created_at FROM products').all();
   products.forEach(p => console.log(p));
 } catch(e) { console.log('No products table'); }
 
