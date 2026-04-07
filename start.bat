@@ -3,25 +3,20 @@ echo ====================================
 echo   Larkspur Crochets - First Setup
 echo ====================================
 echo.
-
-echo [1/4] Installing root dependencies...
+echo [1/3] Installing root dependencies...
 call npm install
-
-echo [2/4] Installing backend dependencies...
+echo.
+echo [2/3] Installing backend dependencies...
 cd backend
 call npm install
-echo Resetting admin credentials...
+echo Resetting admin...
 call node reset-admin.js
 cd ..
-
-echo [3/4] Installing frontend dependencies...
-(no separate frontend folder - already at root)
-
-echo [4/4] Starting servers...
-start cmd /k "cd backend && node server.js"
+echo.
+echo [3/3] Starting servers...
+start cmd /k "cd /d %~dp0backend && node server.js"
 timeout /t 3 /nobreak
-start cmd /k "vite"
-
+start cmd /k "cd /d %~dp0 && npx vite"
 echo.
 echo ====================================
 echo Open: http://localhost:5173

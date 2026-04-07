@@ -40,9 +40,9 @@ app.use('/api/reviews', reviewRoutes)
 
 app.post('/api/admin/login', async (req, res) => {
   const { username, password } = req.body
-  const admin = db.prepare('SELECT * FROM admins WHERE username = ?').get(username)
+  const admin = db.prepare('SELECT * FROM users WHERE username = ?').get(username)
   if (!admin) return res.status(401).json({ error: 'Invalid credentials' })
-  const match = await bcrypt.compare(password, admin.password_hash)
+  const match = await bcrypt.compare(password, admin.password)
   if (!match) return res.status(401).json({ error: 'Invalid credentials' })
   res.json({ success: true, token: 'admin-token' })
 })

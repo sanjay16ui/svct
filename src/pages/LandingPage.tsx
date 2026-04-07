@@ -29,7 +29,7 @@ const stats = [
 
 function StatCounter({ stat, animate }: { stat: any, animate: boolean }) {
   const [count, setCount] = useState(0)
-  
+
   useEffect(() => {
     if (!animate) return
     let start = 0
@@ -44,7 +44,7 @@ function StatCounter({ stat, animate }: { stat: any, animate: boolean }) {
     }, 50)
     return () => clearInterval(interval)
   }, [animate, stat.value])
-  
+
   return (
     <div className="flex flex-col items-center justify-center text-center">
       <span className="text-3xl mb-2">{stat.icon}</span>
@@ -59,7 +59,7 @@ function StatCounter({ stat, animate }: { stat: any, animate: boolean }) {
 function AnimatedStatsSection() {
   const [inView, setInView] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  
+
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) setInView(true)
@@ -67,7 +67,7 @@ function AnimatedStatsSection() {
     if (ref.current) observer.observe(ref.current)
     return () => observer.disconnect()
   }, [])
-  
+
   return (
     <section ref={ref} className="w-full bg-[rgba(255,255,255,0.03)] py-12 border-y border-white/5 backdrop-blur-md relative z-20">
       <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -114,7 +114,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     const playAudio = () => {
-      bgAudio.play().catch(() => {})
+      bgAudio.play().catch(() => { })
     }
 
     playAudio()
@@ -133,20 +133,20 @@ export default function LandingPage() {
   return (
     <main className="bg-black text-white min-h-screen">
       <div style={{
-        position:'fixed',top:0,left:0,height:'3px',
-        width:`${scrollProgress}%`,zIndex:99999,
-        background:'linear-gradient(90deg,#f5c842,#e8a020)',
-        transition:'width 0.1s ease'
+        position: 'fixed', top: 0, left: 0, height: '3px',
+        width: `${scrollProgress}%`, zIndex: 99999,
+        background: 'linear-gradient(90deg,#f5c842,#e8a020)',
+        transition: 'width 0.1s ease'
       }} />
       {showTop && (
         <motion.button
-          initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-          onClick={() => window.scrollTo({top:0,behavior:'smooth'})}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           style={{
-            position:'fixed',bottom:32,right:32,width:48,height:48,
-            borderRadius:'50%',background:'#f5c842',border:'none',
-            cursor:'pointer',zIndex:9999,fontSize:20,
-            boxShadow:'0 0 20px #f5c84260'
+            position: 'fixed', bottom: 32, right: 32, width: 48, height: 48,
+            borderRadius: '50%', background: '#f5c842', border: 'none',
+            cursor: 'pointer', zIndex: 9999, fontSize: 20,
+            boxShadow: '0 0 20px #f5c84260'
           }}
         >⬆</motion.button>
       )}
@@ -197,7 +197,7 @@ export default function LandingPage() {
                     setShowVideo(true)
                     setTimeout(() => {
                       if (inlineVideoRef.current) {
-                        inlineVideoRef.current.play().catch(() => {})
+                        inlineVideoRef.current.play().catch(() => { })
                       }
                     }, 50)
                   }}
@@ -256,7 +256,7 @@ export default function LandingPage() {
           </a>
         </div>
       </section>
-      
+
       <AnimatedStatsSection />
 
       <motion.section
@@ -427,7 +427,7 @@ export default function LandingPage() {
             {/* Orbit Rings & Images */}
             {(() => {
               const images = [
-                '/images/pic1.jpg', '/images/pic2.jpg', '/images/pic3.jpg', 
+                '/images/pic1.jpg', '/images/pic2.jpg', '/images/pic3.jpg',
                 '/images/pic4.jpg', '/images/pic5.jpg', '/images/pic6.jpg'
               ];
               // 3 concentric rings, 2 images per ring dynamically positioned
@@ -439,7 +439,7 @@ export default function LandingPage() {
 
               return rings.map((ring, ringIdx) => {
                 const ringImages = images.slice(ringIdx * 2, ringIdx * 2 + 2);
-                
+
                 return (
                   <motion.div
                     key={ring.id}
@@ -457,7 +457,7 @@ export default function LandingPage() {
                       const angle = imgIdx * 180;
                       // Determine placement offset:
                       const isTop = angle === 0;
-                      
+
                       return (
                         <div
                           key={src}

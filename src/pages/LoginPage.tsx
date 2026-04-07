@@ -7,6 +7,9 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 
 export default function LoginPage() {
+  const ADMIN_USER = import.meta.env.VITE_ADMIN_USERNAME || 'sathurika'
+  const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASSWORD || 'sathu@2004'
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -61,13 +64,26 @@ export default function LoginPage() {
             <p className="text-xs text-white/70 mb-3">Admins: use the button below to autofill credentials.</p>
             <button
               type="button"
-              onClick={() => {
-                setEmail('sathurika')
-                setPassword('Sathu@200604')
+              onClick={async () => {
+                setEmail(ADMIN_USER)
+                setPassword(ADMIN_PASS)
+                setError('')
+                try {
+                  const { data } = await api.post('/api/auth/login', {
+                    email: ADMIN_USER,
+                    password: ADMIN_PASS,
+                  })
+                  if (!data.success) return setError(data.message)
+                  login(data.user)
+                  showToast('Welcome Admin Sathurika 👑', 'success')
+                  navigate('/admin')
+                } catch (err: any) {
+                  setError(err.response?.data?.message || 'Admin login failed.')
+                }
               }}
               className="w-full bg-amber-400/90 hover:bg-amber-300 text-black py-2.5 rounded-full font-semibold"
             >
-              Login as Admin
+              Login as Admin 👑
             </button>
           </div>
         </div>
