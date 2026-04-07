@@ -2,6 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import bcrypt from 'bcryptjs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import multer from 'multer'
 import db from './db.js'
 import authRoutes from './routes/auth.js'
 import productRoutes from './routes/products.js'
@@ -11,20 +14,66 @@ import { requireAdmin } from './middleware/authMiddleware.js'
 
 dotenv.config()
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 const app = express()
 const PORT = process.env.PORT || 5000
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: true,
   credentials: true
 }))
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\s/g, '_'))
+});
+const upload = multer({ storage });
 app.use(express.json())
-app.use('/uploads', express.static('uploads'))
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/reviews', reviewRoutes)
+
+app.post('/api/admin/login', async (req, res) => {
+  const { username, password } = req.body
+  const admin = db.prepare('SELECT * FROM admins WHERE username = ?').get(username)
+  if (!admin) return res.status(401).json({ error: 'Invalid credentials' })
+  const match = await bcrypt.compare(password, admin.password_hash)
+  if (!match) return res.status(401).json({ error: 'Invalid credentials' })
+  res.json({ success: true, token: 'admin-token' })
+})
+
+app.get('/api/wish-orders', (req, res) => {
+  const orders = db.all('SELECT * FROM wish_orders ORDER BY created_at DESC')
+  res.json(orders)
+})
+
+app.post('/api/wish-orders', upload.array('references', 5), (req, res) => {
+  const { user_id, guest_name, guest_email, message } = req.body
+  const files = req.files ? req.files.map(f => f.filename).join(',') : ''
+  db.run(`
+    INSERT INTO wish_orders (user_id, guest_name, guest_email, message, reference_files)
+    VALUES (?, ?, ?, ?, ?)
+  `, [user_id || null, guest_name || 'Guest', guest_email || '', message, files])
+  res.json({ success: true, message: 'Wish order submitted!' })
+})
+
+app.patch('/api/wish-orders/:id/reply', (req, res) => {
+  const { admin_reply, status } = req.body
+  db.run('UPDATE wish_orders SET admin_reply = ?, status = ? WHERE id = ?',
+    [admin_reply, status || 'in-progress', req.params.id])
+  res.json({ success: true })
+})
+
+app.get('/api/wish-orders/:id', (req, res) => {
+  const order = db.get('SELECT * FROM wish_orders WHERE id = ?', [req.params.id])
+  if (!order) return res.status(404).json({ error: 'Not found' })
+  res.json(order)
+})
 
 app.get('/api/admin/users', requireAdmin, async (_req, res) => {
   const users = db.all('SELECT id, username, email, password, role, created_at, last_login FROM users ORDER BY id DESC')
@@ -116,14 +165,26 @@ app.delete('/api/admin/clear/all', requireAdmin, async (_req, res) => {
 })
 
 async function ensureAdmin() {
+  // Primary admin — sathurika / sathu@2004
   const row = db.get('SELECT id FROM users WHERE username = ?', ['sathurika'])
-  if (row) return
-  const passwordHash = await bcrypt.hash('Sathu@200604', 10)
-  db.run("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')", [
-    'sathurika',
-    'sathurika@larkspur.local',
-    passwordHash,
-  ])
+  if (!row) {
+    const passwordHash = await bcrypt.hash('sathu@2004', 10)
+    db.run("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')", [
+      'sathurika',
+      'sathurika@larkspur.local',
+      passwordHash,
+    ])
+  }
+  // Fallback admin — admin / admin123
+  const genericAdmin = db.get('SELECT id FROM users WHERE username = ?', ['admin'])
+  if (!genericAdmin) {
+    const hash = await bcrypt.hash('admin123', 10)
+    db.run("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')", [
+      'admin',
+      'admin@larkspur.local',
+      hash,
+    ])
+  }
 }
 
 app.listen(PORT, async () => {

@@ -1,64 +1,45 @@
+import Database from 'better-sqlite3'
 import fs from 'fs'
 import path from 'path'
-import initSqlJs from 'sql.js'
 
 const backendDir = process.cwd()
-const dbPath = path.join(backendDir, 'larkspur.db')
+export const dbPath = path.join(backendDir, 'larkspur.db')
 
-const SQL = await initSqlJs({
-  locateFile: (file) => path.join(backendDir, 'node_modules', 'sql.js', 'dist', file),
-})
+const sqlite = new Database(dbPath)
 
-const sqlite = fs.existsSync(dbPath)
-  ? new SQL.Database(fs.readFileSync(dbPath))
-  : new SQL.Database()
-
-function persistIfWrite(sql) {
-  if (!/^\s*(insert|update|delete|replace|create|drop|alter)\s+/i.test(sql)) return
-  const data = sqlite.export()
-  fs.writeFileSync(dbPath, Buffer.from(data))
-}
-
-function rowsFromExecResult(execResult) {
-  if (!execResult.length) return { columns: [], rows: [] }
-  const { columns, values } = execResult[0]
-  const rows = values.map((row) =>
-    Object.fromEntries(columns.map((column, index) => [column, row[index]])),
-  )
-  return { columns, rows }
+function rowsFromExecResult(stmt) {
+  // Not directly equivalent, better-sqlite3 doesn't return rows on exec
+  return { columns: [], rows: [] }
 }
 
 function all(sql, params = []) {
   const stmt = sqlite.prepare(sql)
-  stmt.bind(params)
-  const rows = []
-  while (stmt.step()) rows.push(stmt.getAsObject())
-  stmt.free()
-  return rows
+  return stmt.all(params)
 }
 
 function get(sql, params = []) {
-  return all(sql, params)[0] || null
+  const stmt = sqlite.prepare(sql)
+  return stmt.get(params)
 }
 
 function run(sql, params = []) {
-  sqlite.run(sql, params)
-  const rowCount = sqlite.getRowsModified()
-  persistIfWrite(sql)
-  let lastInsertId = null
-  if (/^\s*insert\s+/i.test(sql)) {
-    const row = get('SELECT last_insert_rowid() AS id')
-    lastInsertId = row?.id ?? null
-  }
-  return { rowCount, lastInsertId }
+  const stmt = sqlite.prepare(sql)
+  const result = stmt.run(params)
+  return { rowCount: result.changes, lastInsertId: result.lastInsertRowid }
 }
 
 function exec(sql) {
-  const result = sqlite.exec(sql)
-  persistIfWrite(sql)
-  return rowsFromExecResult(result)
+  if (sql.trim().toLowerCase().startsWith('select')) {
+      const stmt = sqlite.prepare(sql)
+      const rows = stmt.all()
+      const columns = rows.length ? Object.keys(rows[0]) : []
+      return { columns, rows, rowCount: rows.length }
+  }
+  sqlite.exec(sql)
+  return { columns: [], rows: [], rowCount: 0 }
 }
 
+// Ensure tables exist
 sqlite.exec(`
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,6 +49,12 @@ CREATE TABLE IF NOT EXISTS users (
   role TEXT NOT NULL DEFAULT 'user',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   last_login TEXT
+);
+
+CREATE TABLE IF NOT EXISTS admins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL,
+  password_hash TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS products (
@@ -96,22 +83,30 @@ CREATE TABLE IF NOT EXISTS orders (
 
 CREATE TABLE IF NOT EXISTS reviews (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  product_id INTEGER NOT NULL,
-  user_id INTEGER NOT NULL,
-  username TEXT NOT NULL,
-  rating INTEGER NOT NULL,
-  review_text TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  product_id INTEGER,
+  username TEXT,
+  rating INTEGER,
+  comment TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS wish_orders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  guest_name TEXT,
+  guest_email TEXT,
+  message TEXT NOT NULL,
+  reference_files TEXT,
+  status TEXT DEFAULT 'pending',
+  admin_reply TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 `)
-persistIfWrite('CREATE TABLE IF NOT EXISTS users')
 
-// lightweight migration for older db files
 try {
   sqlite.exec('ALTER TABLE products ADD COLUMN stock INTEGER DEFAULT 0;')
-  persistIfWrite('ALTER TABLE products ADD COLUMN stock')
 } catch {
-  // ignore if column exists
+  // ignore
 }
 
 const db = {
@@ -119,7 +114,7 @@ const db = {
   get,
   run,
   exec,
+  prepare: (sql) => sqlite.prepare(sql) // Expose prepare to match user requirements
 }
 
 export default db
-export { dbPath }

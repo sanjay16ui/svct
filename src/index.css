@@ -192,3 +192,16 @@ html {
 .stitch-border:hover::after {
   opacity: 1;
 }
+
+@keyframes sparkle {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0) translateY(-20px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 18px 4px #f5c84280, 0 0 0 0 #f5c84240; }
+  50% { box-shadow: 0 0 32px 10px #f5c842cc, 0 0 0 8px #f5c84210; }
+}
+.wish-btn {
+  animation: pulseGlow 2.2s ease-in-out infinite;
+}

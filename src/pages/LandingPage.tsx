@@ -20,10 +20,97 @@ if (typeof Audio !== 'undefined') {
   bgAudio.volume = 0.4
 }
 
+const stats = [
+  { value: 500, label: 'Happy Customers', suffix: '+', icon: '✨' },
+  { value: 200, label: 'Handmade Pieces', suffix: '+', icon: '🧶' },
+  { value: 4.9, label: 'Star Rating', suffix: '', icon: '⭐' },
+  { value: 100, label: 'Fast Deliveries', suffix: '%', icon: '📦' },
+]
+
+function StatCounter({ stat, animate }: { stat: any, animate: boolean }) {
+  const [count, setCount] = useState(0)
+  
+  useEffect(() => {
+    if (!animate) return
+    let start = 0
+    const interval = setInterval(() => {
+      start += (stat.value / 30)
+      if (start >= stat.value) {
+        setCount(stat.value)
+        clearInterval(interval)
+      } else {
+        setCount(start)
+      }
+    }, 50)
+    return () => clearInterval(interval)
+  }, [animate, stat.value])
+  
+  return (
+    <div className="flex flex-col items-center justify-center text-center">
+      <span className="text-3xl mb-2">{stat.icon}</span>
+      <div className="font-serif italic text-5xl text-[#f5c842] mb-1">
+        {count % 1 !== 0 ? count.toFixed(1) : Math.floor(count)}{stat.suffix}
+      </div>
+      <span className="text-white text-sm uppercase tracking-widest">{stat.label}</span>
+    </div>
+  )
+}
+
+function AnimatedStatsSection() {
+  const [inView, setInView] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setInView(true)
+    }, { threshold: 0.2 })
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+  
+  return (
+    <section ref={ref} className="w-full bg-[rgba(255,255,255,0.03)] py-12 border-y border-white/5 backdrop-blur-md relative z-20">
+      <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+        {stats.map((s, i) => (
+          <StatCounter key={i} stat={s} animate={inView} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export default function LandingPage() {
   const [showVideo, setShowVideo] = useState(false)
   const [muted, setMuted] = useState(false)
   const inlineVideoRef = useRef<HTMLVideoElement | null>(null)
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [showTop, setShowTop] = useState(false)
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const p = document.createElement('div')
+      p.style.cssText = `
+        position:fixed;left:${e.clientX}px;top:${e.clientY}px;
+        width:8px;height:8px;background:radial-gradient(circle,#f5c842,transparent);
+        border-radius:50%;pointer-events:none;z-index:9999;
+        transform:translate(-50%,-50%);animation:sparkle 0.8s ease forwards;
+      `
+      document.body.appendChild(p)
+      setTimeout(() => p.remove(), 800)
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const total = document.documentElement.scrollHeight - window.innerHeight
+      setScrollProgress((window.scrollY / total) * 100)
+      setShowTop(window.scrollY > 400)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   useEffect(() => {
     const playAudio = () => {
@@ -45,6 +132,24 @@ export default function LandingPage() {
 
   return (
     <main className="bg-black text-white min-h-screen">
+      <div style={{
+        position:'fixed',top:0,left:0,height:'3px',
+        width:`${scrollProgress}%`,zIndex:99999,
+        background:'linear-gradient(90deg,#f5c842,#e8a020)',
+        transition:'width 0.1s ease'
+      }} />
+      {showTop && (
+        <motion.button
+          initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+          onClick={() => window.scrollTo({top:0,behavior:'smooth'})}
+          style={{
+            position:'fixed',bottom:32,right:32,width:48,height:48,
+            borderRadius:'50%',background:'#f5c842',border:'none',
+            cursor:'pointer',zIndex:9999,fontSize:20,
+            boxShadow:'0 0 20px #f5c84260'
+          }}
+        >⬆</motion.button>
+      )}
       <section id="hero" className="relative min-h-screen flex flex-col justify-center items-center px-6 pt-24 pb-28 overflow-hidden">
         <HeroParticles />
         <div className="absolute inset-0">
@@ -151,6 +256,8 @@ export default function LandingPage() {
           </a>
         </div>
       </section>
+      
+      <AnimatedStatsSection />
 
       <motion.section
         id="about"
@@ -372,7 +479,34 @@ export default function LandingPage() {
                             }}
                             alt="Orbital Bestseller"
                           />
-                          <div className="absolute inset-0 bg-transparent group-hover:bg-[#f5c842]/20 transition-colors duration-500 rounded-2xl md:rounded-[2rem] pointer-events-none" />
+                          <div
+                            className="absolute inset-0 bg-transparent group-hover:bg-[#f5c842]/20 transition-colors duration-500 rounded-2xl md:rounded-[2rem] pointer-events-none"
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              const w = JSON.parse(localStorage.getItem('wishlist') || '[]')
+                              const id = imgIdx * 100 // fake ID for static bestseller items
+                              if (w.includes(id)) {
+                                localStorage.setItem('wishlist', JSON.stringify(w.filter((x: number) => x !== id)))
+                                e.currentTarget.querySelector('svg')!.setAttribute('fill', 'transparent')
+                              } else {
+                                localStorage.setItem('wishlist', JSON.stringify([...w, id]))
+                                e.currentTarget.querySelector('svg')!.setAttribute('fill', '#f5c842')
+                              }
+                            }}
+                            style={{
+                              position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.6)',
+                              border: '1px solid rgba(245,200,66,0.4)', borderRadius: '50%',
+                              width: 36, height: 36, cursor: 'pointer', zIndex: 10,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="transparent" stroke="#f5c842" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                          </button>
                         </div>
                       )
                     })}

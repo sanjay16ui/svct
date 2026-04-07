@@ -1,17 +1,31 @@
 import { useEffect, useMemo, useState } from 'react'
-import api, { API_URL } from '../api'
+import api from '../api'
+import { getImageUrl } from '../utils/getImageUrl'
 import LiveUsersTable from '../components/LiveUsersTable'
 import SqlTerminal from '../components/SqlTerminal'
 import SignupFormCard from '../components/SignupFormCard'
 import { useToast } from '../context/ToastContext'
 import type { Order, Product } from '../types'
 
-type Mode = 'product' | 'database'
+type Mode = 'product' | 'database' | 'wishes'
+
+interface WishOrder {
+  id: number
+  user_id: number | null
+  guest_name: string
+  guest_email: string
+  message: string
+  reference_files: string
+  status: string
+  admin_reply: string | null
+  created_at: string
+}
 
 export default function AdminPage() {
   const [mode, setMode] = useState<Mode>('product')
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
+  const [wishOrders, setWishOrders] = useState<WishOrder[]>([])
   const [lastSeenOrderId, setLastSeenOrderId] = useState<number>(0)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload')
@@ -33,6 +47,7 @@ export default function AdminPage() {
   const loadAll = () => {
     api.get('/api/products').then((r) => setProducts(r.data.products || []))
     api.get('/api/orders').then((r) => setOrders(r.data.orders || []))
+    api.get('/api/wish-orders').then((r) => setWishOrders(r.data || []))
   }
 
   useEffect(() => {
@@ -112,11 +127,22 @@ export default function AdminPage() {
     loadAll()
   }
 
+  const [wishReplyId, setWishReplyId] = useState<number | null>(null)
+  const [wishReplyForm, setWishReplyForm] = useState({ admin_reply: '', status: 'in-progress' })
+  const [expandedWishId, setExpandedWishId] = useState<number | null>(null)
+
+  const handleWishReply = async (id: number) => {
+    await api.patch(`/api/wish-orders/${id}/reply`, wishReplyForm)
+    setWishReplyId(null)
+    loadAll()
+  }
+
   return (
     <main className="min-h-screen bg-black text-white p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex gap-3">
-          <button onClick={() => setMode('product')} className={`px-5 py-2 rounded-full ${mode === 'product' ? 'bg-white text-black' : 'bg-white/10'}`}>Product Manager</button>
+          <button onClick={() => setMode('product')} className={`px-5 py-2 rounded-full ${mode === 'product' ? 'bg-white text-black' : 'bg-white/10'}`}>Products & Orders</button>
+          <button onClick={() => setMode('wishes')} className={`px-5 py-2 rounded-full ${mode === 'wishes' ? 'bg-white text-black' : 'bg-white/10'}`}>Wish Orders</button>
           <button onClick={() => setMode('database')} className={`px-5 py-2 rounded-full ${mode === 'database' ? 'bg-white text-black' : 'bg-white/10'}`}>Database Terminal</button>
         </div>
       </div>
@@ -220,7 +246,7 @@ export default function AdminPage() {
                       reader.readAsDataURL(file)
                     }}
                   />
-                  {imagePreview && <img src={imagePreview?.startsWith('http') || imagePreview?.startsWith('data:') ? imagePreview : imagePreview?.startsWith('/images/') ? imagePreview : `${API_URL}/${(imagePreview || '').replace(new RegExp('^/+'), '')}`} onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }} alt="preview" className="h-24 w-24 rounded-xl object-cover border border-white/10" />}
+                  {imagePreview && <img src={getImageUrl({ image_url: imagePreview })} onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }} alt="preview" className="h-24 w-24 rounded-xl object-cover border border-white/10" />}
                 </div>
               ) : (
                 <input
@@ -257,7 +283,7 @@ export default function AdminPage() {
               </thead>
               <tbody>{products.map((p, i) => (
                 <tr key={p.id} className={i % 2 === 0 ? 'bg-white/[0.03]' : ''}>
-                  <td><img src={p.image_url?.startsWith('http') || p.image_url?.startsWith('data:') ? p.image_url : p.image_url?.startsWith('/images/') ? p.image_url : `${API_URL}/${(p.image_url || '').replace(new RegExp('^/+'), '')}`} onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }} className="h-12 w-12 rounded object-cover" /></td>
+                  <td><img src={getImageUrl(p)} onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }} className="h-12 w-12 rounded object-cover" /></td>
                   <td>{p.title}</td>
                   <td>${Number(p.price).toFixed(2)}</td>
                   <td>{p.category}</td>
@@ -275,6 +301,114 @@ export default function AdminPage() {
             </table>
           </div>
           {editingId && <button onClick={saveEdit} className="bg-emerald-400 text-black px-4 py-2 rounded-full">Save Product Edit</button>}
+        </section>
+      )}
+
+      {mode === 'wishes' && (
+        <section className="space-y-5">
+          <div className="liquid-glass rounded-2xl border border-white/10 p-4">
+            <h2 className="font-serif text-4xl mb-4">Wish Orders</h2>
+            <div className="overflow-auto border border-white/10 rounded-2xl">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-white/15 bg-white/5">
+                    <th className="p-3">ID / Date</th>
+                    <th className="p-3">Guest Details</th>
+                    <th className="p-3">Message (Brief)</th>
+                    <th className="p-3">Files</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>{wishOrders.map((w, i) => (
+                  <tr key={w.id} className={`border-b border-white/10 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
+                    <td className="p-3">
+                      <div>#{w.id}</div>
+                      <div className="text-xs text-white/50">{new Date(w.created_at).toLocaleDateString()}</div>
+                    </td>
+                    <td className="p-3">
+                      <div>{w.guest_name}</div>
+                      <div className="text-xs text-[#f5c842]">{w.guest_email}</div>
+                    </td>
+                    <td className="p-3 max-w-[200px] truncate text-white/80">
+                      {w.message}
+                    </td>
+                    <td className="p-3">
+                      {w.reference_files ? w.reference_files.split(',').length : 0} file(s)
+                    </td>
+                    <td className="p-3">
+                      <span className={`px-2 py-1 rounded text-xs lowercase ${w.status === 'pending' ? 'bg-amber-500/20 text-amber-300' : w.status === 'in-progress' ? 'bg-blue-500/20 text-blue-300' : w.status === 'completed' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+                        {w.status}
+                      </span>
+                    </td>
+                    <td className="p-3 space-y-1">
+                      <button onClick={() => setExpandedWishId(expandedWishId === w.id ? null : w.id)} className="block text-white/70 hover:text-white text-xs underline">View Full</button>
+                      <button onClick={() => {
+                        setWishReplyId(w.id)
+                        setWishReplyForm({ admin_reply: w.admin_reply || '', status: w.status })
+                      }} className="block text-[#f5c842] hover:text-[#f5c842]/80 text-xs underline">Reply / Edit</button>
+                    </td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+            
+            {expandedWishId && (() => {
+              const ew = wishOrders.find(x => x.id === expandedWishId)
+              if (!ew) return null
+              return (
+                <div className="mt-4 p-5 liquid-glass rounded-2xl border border-white/20">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="font-serif text-2xl text-[#f5c842]">Full Wish Detail #{ew.id}</h3>
+                    <button onClick={() => setExpandedWishId(null)} className="text-white/60 hover:text-white">✕</button>
+                  </div>
+                  <p className="whitespace-pre-wrap text-white/90 text-sm leading-relaxed mb-6">{ew.message}</p>
+                  {ew.reference_files && (
+                    <div>
+                      <h4 className="text-xs uppercase tracking-widest text-[#f5c842] mb-3">Reference Files</h4>
+                      <div className="flex flex-wrap gap-4">
+                        {ew.reference_files.split(',').map((f, i) => (
+                           f.endsWith('.pdf') ? 
+                             <a key={i} href={import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/uploads/${f}` : `http://localhost:5000/uploads/${f}`} target="_blank" className="w-24 h-24 bg-white/10 rounded flex items-center justify-center p-2 text-center text-xs break-all border border-white/20">📄 {f}</a> :
+                             <a key={i} href={import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/uploads/${f}` : `http://localhost:5000/uploads/${f}`} target="_blank"><img src={import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/uploads/${f}` : `http://localhost:5000/uploads/${f}`} alt="ref" className="w-24 h-24 object-cover rounded border border-white/20 hover:scale-105 transition-transform" /></a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
+            {wishReplyId && (
+              <div className="mt-4 p-5 bg-[#1a1a1a] rounded-2xl border border-[#f5c842]/30">
+                 <div className="flex justify-between items-center mb-3">
+                   <h4 className="font-bold text-[#f5c842]">Reply to Wish #{wishReplyId}</h4>
+                   <button onClick={() => setWishReplyId(null)} className="text-white/60">✕</button>
+                 </div>
+                 <textarea
+                   value={wishReplyForm.admin_reply}
+                   onChange={e => setWishReplyForm(f => ({ ...f, admin_reply: e.target.value }))}
+                   placeholder="Type your reply here..."
+                   className="w-full bg-black/50 border border-white/10 rounded my-2 p-3 text-sm min-h-[100px] outline-none text-white"
+                 />
+                 <div className="flex items-center gap-3 mt-2">
+                   <select
+                     value={wishReplyForm.status}
+                     onChange={e => setWishReplyForm(f => ({ ...f, status: e.target.value }))}
+                     className="bg-black/50 border border-white/10 cursor-pointer rounded p-2 text-sm outline-none"
+                   >
+                     <option value="pending">pending</option>
+                     <option value="in-progress">in-progress</option>
+                     <option value="completed">completed</option>
+                     <option value="rejected">rejected</option>
+                   </select>
+                   <button onClick={() => handleWishReply(wishReplyId)} className="bg-[#f5c842] text-black rounded px-5 py-2 font-bold text-sm hover:opacity-90">
+                     Send Reply
+                   </button>
+                 </div>
+              </div>
+            )}
+          </div>
         </section>
       )}
 

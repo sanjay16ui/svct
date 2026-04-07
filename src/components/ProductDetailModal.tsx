@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
-import api, { API_URL } from '../api'
+import api from '../api'
+import { getImageUrl } from '../utils/getImageUrl'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import type { Product, Review } from '../types'
@@ -66,18 +67,19 @@ export default function ProductDetailModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 p-4 grid place-items-center">
+    <div className="fixed inset-0 z-50 p-4 grid place-items-center" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 18 }}
+        initial={{ opacity: 0, scale: 0.95, y: 0 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="liquid-glass w-full max-w-3xl rounded-3xl border border-white/10 overflow-hidden"
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="liquid-glass w-full max-w-3xl rounded-3xl border border-white/10 overflow-hidden relative"
       >
         <div className="grid md:grid-cols-2 gap-0">
-            <img 
-              src={product.image_url?.startsWith('http') || product.image_url?.startsWith('data:') ? product.image_url : product.image_url?.startsWith('/images/') ? product.image_url : `${API_URL}/${(product.image_url || '').replace(new RegExp('^/+'), '')}`} 
-              onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }} 
-              className="w-full h-[420px] object-cover rounded-2xl border border-white/10" 
-            />
+          <img
+            src={getImageUrl(product)}
+            onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }}
+            className="w-full h-[420px] object-cover rounded-2xl border border-white/10"
+          />
           <div className="p-6">
             <div className="flex items-start justify-between gap-3">
               <div>

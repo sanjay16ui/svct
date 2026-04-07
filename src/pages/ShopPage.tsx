@@ -1,12 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
-import api, { API_URL } from '../api'
+import api from '../api'
+import { getImageUrl } from '../utils/getImageUrl'
 import OrderSuccessModal from '../components/OrderSuccessModal'
 import ProductDetailModal from '../components/ProductDetailModal'
+import WishOrderModal from '../components/WishOrderModal'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import type { Product } from '../types'
-import { Search } from 'lucide-react'
+import { Search, Heart } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 
 export default function ShopPage() {
@@ -15,6 +17,7 @@ export default function ShopPage() {
   const [category, setCategory] = useState('All')
   const [page, setPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
+  const [wishModalOpen, setWishModalOpen] = useState(false)
   const [lastOrderId, setLastOrderId] = useState<number | null>(null)
   const [selected, setSelected] = useState<Product | null>(null)
   const { user } = useAuth()
@@ -23,6 +26,18 @@ export default function ShopPage() {
   const [points, setPoints] = useState(150)
   const [socialToast, setSocialToast] = useState<{ title: string; body: string } | null>(null)
   const location = useLocation()
+  
+  const [wishlist, setWishlist] = useState<number[]>(() => 
+    JSON.parse(localStorage.getItem('wishlist') || '[]')
+  )
+
+  const toggleWishlist = (id: number) => {
+    const updated = wishlist.includes(id)
+      ? wishlist.filter(x => x !== id)
+      : [...wishlist, id]
+    setWishlist(updated)
+    localStorage.setItem('wishlist', JSON.stringify(updated))
+  }
 
   useEffect(() => {
     const load = () => api.get('/api/products').then((res) => setProducts(res.data.products || []))
@@ -212,20 +227,36 @@ export default function ShopPage() {
                   position: 'relative',
                 }}
                 onMouseEnter={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.transform = 'translateY(-10px) scale(1.02)'
-                  ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,200,66,0.5)'
-                  ;(e.currentTarget as HTMLElement).style.boxShadow =
-                    '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(245,200,66,0.15)'
+                  ; (e.currentTarget as HTMLElement).style.transform = 'translateY(-10px) scale(1.02)'
+                    ; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,200,66,0.5)'
+                    ; (e.currentTarget as HTMLElement).style.boxShadow =
+                      '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(245,200,66,0.15)'
                 }}
                 onMouseLeave={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.transform = 'none'
-                  ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,200,66,0.15)'
-                  ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
+                  ; (e.currentTarget as HTMLElement).style.transform = 'none'
+                    ; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,200,66,0.15)'
+                    ; (e.currentTarget as HTMLElement).style.boxShadow = 'none'
                 }}
               >
                 <div style={{ position: 'relative' }}>
+                  <button onClick={(e) => { e.stopPropagation(); toggleWishlist(p.id) }}
+                    style={{position:'absolute',top:12,left:12,background:'rgba(0,0,0,0.6)',
+                      border:'1px solid rgba(245,200,66,0.4)',borderRadius:'50%',
+                      width:36,height:36,cursor:'pointer',zIndex:10,
+                      display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <Heart size={18} fill={wishlist.includes(p.id)?'#f5c842':'transparent'} color="#f5c842"/>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelected(p)
+                    }}
+                    className="absolute inset-0 m-auto w-max h-max bg-black/60 border border-[#f5c842] text-white px-6 py-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 backdrop-blur-sm"
+                  >
+                    Quick View 👁️
+                  </button>
                   <img
-                    src={p.image_url?.startsWith('http') || p.image_url?.startsWith('data:') ? p.image_url : p.image_url?.startsWith('/images/') ? p.image_url : `${API_URL}/${(p.image_url || '').replace(new RegExp('^/+'), '')}`}
+                    src={getImageUrl(p)}
                     onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }}
                     alt={p.title}
                     style={{
@@ -397,6 +428,26 @@ export default function ShopPage() {
           onOrder={() => orderNow(selected.id, Number(selected.price))}
         />
       )}
+
+      <button
+        onClick={() => setWishModalOpen(true)}
+        className="wish-btn"
+        style={{
+          position: 'fixed', bottom: 90, right: 28, zIndex: 9998,
+          background: 'linear-gradient(135deg, #f5c842, #e8a020)',
+          color: '#1a1000', fontWeight: 700, fontSize: 14,
+          border: 'none', borderRadius: 50, padding: '14px 22px',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+          fontFamily: "'Instrument Serif', serif", letterSpacing: 0.5,
+          whiteSpace: 'nowrap'
+        }}
+      >
+        ✨ Your Wish
+      </button>
+
+      <AnimatePresence>
+        {wishModalOpen && <WishOrderModal onClose={() => setWishModalOpen(false)} />}
+      </AnimatePresence>
     </main>
   )
 }
